@@ -10,6 +10,7 @@ from selenium.webdriver.firefox.service import Service as FirefoxService
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.webdriver.edge.service import Service as EdgeService
 from dataconfig.testdata import TestData as TD
+import subprocess
 from dataconfig.testdata import accounts
 
 
@@ -76,6 +77,21 @@ def setup_scope_function(request, browser):
         options = webdriver.FirefoxOptions()
         # options.add_argument('--headless')
         web_driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=options)
+
+
+    elif browser == "safari":
+        if platform.system() != "Darwin":
+            pytest.fail("Safari hanya bisa dijalankan di macOS!")
+
+        # Enable Safari WebDriver via CLI**
+        try:
+            subprocess.run(["sudo", "safaridriver", "--enable"], check=True)
+        except Exception as e:
+            pytest.fail(f"Error saat mengaktifkan Safari WebDriver: {e}")
+
+        # Jalankan Safari WebDriver
+        options = webdriver.SafariOptions()
+        web_driver = webdriver.Safari(options=options)
 
     else:
         pytest.fail(f"Browser '{browser}' is not supported!")

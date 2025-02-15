@@ -5,7 +5,7 @@ from Tests.object_instance import ObjectInstances
 @pytest.mark.usefixtures("setup_scope_function")
 class TestLoginAddItemToCart(ObjectInstances):
 
-    @pytest.mark.skip
+    @pytest.mark.smoke
     def test_add_1_item_to_cart(self):
         # Automate login flow, add 1 item to cart and verify that item is added to cart
 

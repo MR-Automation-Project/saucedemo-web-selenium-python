@@ -1,0 +1,119 @@
+  name: Automation Test in Pipeline
+
+  on:
+    workflow_dispatch:          # Workflow dapat dijalankan manual dari GitHub Actions UI
+      inputs:
+        loglevel:
+          description: 'log level'
+          required: true
+          default: 'warning'
+        tags:
+          description: 'testing on pipeline'
+    push:
+      branches: [ main ]        # Workflow berjalan saat ada push ke branch main
+    schedule:
+      - cron: "0 17 * * *"      # Menjalankan workflow setiap hari pukul 00:00 UTC(+7 waktu local)
+
+# ------------------- JOB 1: Run Test on Windows Browser(Chrome/Firefox) -------------------
+  jobs:
+    test-chrome-windows:
+      timeout-minutes: 120
+      strategy:
+        fail-fast: false
+        matrix:
+          os: [windows-latest]
+          python-versions:
+            - "3.12"
+
+      name: Run Test on Chrome(Windows)
+      runs-on: ${{ matrix.os }}
+
+      steps:
+        - name: Checkout Code
+          uses: actions/checkout@v3
+
+        - name: Install Python
+          uses: actions/setup-python@v3
+          with:
+            python-version: ${{matrix.python-version}}
+
+        - name: Install Dependencies
+          run: |
+            python -m pip install --upgrade pip
+            python -m pip install -r requirements.txt
+
+        - name: Set Windows Time to UTC+7
+          run: tzutil /s "SE Asia Standard Time"
+
+#        - name: Set Up Variable Secrets Values
+#          shell: powershell
+#          run: |
+#            $secretValue = "${{ secrets.PASSWORD_SUPER_ADMIN }}"
+#            [Environment]::SetEnvironmentVariable("PASSWORD_SUPER_ADMIN", $secretValue, "Machine")
+#            Add-Content -Path $env:GITHUB_ENV "PASSWORD_SUPER_ADMIN=$secretValue"
+#            $secretValue2 = "${{ secrets.PASSWORD_GENERAL }}"
+#            [Environment]::SetEnvironmentVariable("PASSWORD_GENERAL", $secretValue2, "Machine")
+#            Add-Content -Path $env:GITHUB_ENV "PASSWORD_GENERAL=$secretValue2"
+
+        - name: Create Directory --> Test/reports
+          run: | 
+            cd Test
+            mkdir -p reports
+
+        - name: Run Pytest
+          run: | 
+            cd Test
+            python -m pytest -vs --browser=chrome --url=testing --html=./reports/automation_test_report_on_chrome_win.html --self-contained-html
+
+        - name: Upload Report to Github Artifact
+          uses: actions/upload-artifact@v4
+          if: success() || failure()
+          with:
+            name: Automation_Test_Report
+            path: Test/reports/automation_test_report_on_chrome_win.html
+    # ------------------- JOB 2: Run Test on Safari (macOS) -------------------
+    test-safari-macos:
+      timeout-minutes: 120
+      strategy:
+        fail-fast: false
+        matrix:
+          os: [ macos-latest ]
+          python-versions:
+            - "3.12"
+
+      name: Run Test on Safari (macOS)
+      runs-on: ${{ matrix.os }}
+
+      steps:
+        - name: Checkout Code
+          uses: actions/checkout@v3
+
+        - name: Install Python
+          uses: actions/setup-python@v3
+          with:
+            python-version: ${{ matrix.python-versions }}
+
+        - name: Install Dependencies
+          run: |
+            python -m pip install --upgrade pip
+            python -m pip install -r requirements.txt
+
+        - name: Create Directory --> Test/reports
+          run: |
+            cd Test
+            mkdir -p reports
+
+        - name: Enable Safari WebDriver
+          run: sudo safaridriver --enable
+
+        - name: Run Pytest on Safari
+          run: |
+            cd Test
+            python -m pytest -vs --browser=safari --url=testing --html=./reports/automation_test_report_safari_mac.html --self-contained-html
+
+        - name: Upload Report to Github Artifact
+          uses: actions/upload-artifact@v4
+          if: success() || failure()
+          with:
+            name: Automation_Test_Report_Safari
+            path: Test/reports/automation_test_report_safari_mac.html
