@@ -103,6 +103,10 @@
             cd Tests
             mkdir -p reports
 
+        - name: Set macOS Time to UTC+7
+          run: |
+            sudo systemsetup -settimezone "Asia/Bangkok"
+
         - name: Enable Safari WebDriver
           run: sudo safaridriver --enable
 

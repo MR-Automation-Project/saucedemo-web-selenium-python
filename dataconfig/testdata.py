@@ -9,7 +9,6 @@ class TestData:
     GENERAL_PASSWORD = "secret_sauce"
 
 accounts = [
-    {"username": "sjhfjkgfdg", "password": "dfdf"},
     {"username": "standard_user", "password": "secret_sauce"},
     {"username": "visual_user", "password": "secret_sauce"}
 ]
