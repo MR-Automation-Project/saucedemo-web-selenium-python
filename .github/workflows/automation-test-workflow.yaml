@@ -57,12 +57,12 @@
 
         - name: Create Directory --> Test/reports
           run: | 
-            cd Test
+            cd Tests
             mkdir -p reports
 
         - name: Run Pytest
           run: | 
-            cd Test
+            cd Tests
             python -m pytest -vs --browser=chrome --url=testing --html=./reports/automation_test_report_on_chrome_win.html --self-contained-html
 
         - name: Upload Report to Github Artifact
@@ -70,7 +70,7 @@
           if: success() || failure()
           with:
             name: Automation_Test_Report
-            path: Test/reports/automation_test_report_on_chrome_win.html
+            path: Tests/reports/automation_test_report_on_chrome_win.html
     # ------------------- JOB 2: Run Test on Safari (macOS) -------------------
     test-safari-macos:
       timeout-minutes: 120
@@ -98,9 +98,9 @@
             python -m pip install --upgrade pip
             python -m pip install -r requirements.txt
 
-        - name: Create Directory --> Test/reports
+        - name: Create Directory --> Tests/reports
           run: |
-            cd Test
+            cd Tests
             mkdir -p reports
 
         - name: Enable Safari WebDriver
@@ -108,7 +108,7 @@
 
         - name: Run Pytest on Safari
           run: |
-            cd Test
+            cd Tests
             python -m pytest -vs --browser=safari --url=testing --html=./reports/automation_test_report_safari_mac.html --self-contained-html
 
         - name: Upload Report to Github Artifact
@@ -116,4 +116,4 @@
           if: success() || failure()
           with:
             name: Automation_Test_Report_Safari
-            path: Test/reports/automation_test_report_safari_mac.html
+            path: Tests/reports/automation_test_report_safari_mac.html
