@@ -6,6 +6,7 @@ from Tests.object_instance import ObjectInstances
 @pytest.mark.usefixtures("setup_scope_function")
 class TestLoginAndNavigateAboutPage(ObjectInstances):
 
+    @pytest.mark.debug
     @pytest.mark.parametrize("akun", accounts)
     def test_navigate_to_about_page(self, akun):
         # Automate login flow, click on hamburger button (top left), navigate to 'About' and verify if it successfully navigated or not.

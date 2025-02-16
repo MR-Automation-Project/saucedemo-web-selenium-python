@@ -9,7 +9,8 @@ class TestData:
     GENERAL_PASSWORD = "secret_sauce"
 
 accounts = [
-    {"username": "standard_user", "password": "secret_sauce"},
+    {"username": "standard_zzzz", "password": "secret_sauc1"},
+    # {"username": "standard_user", "password": "secret_sauce"},
     {"username": "visual_user", "password": "secret_sauce"}
 ]
 
