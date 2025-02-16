@@ -1,3 +1,4 @@
+import os
 import time
 import pytest
 import platform
@@ -106,3 +107,28 @@ def setup_scope_function(request, browser):
     yield
     time.sleep(1.5)
     web_driver.quit()
+
+    # capture screenshot jika ada test failed
+SCREENSHOT_DIR = "screenshots"
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    report = outcome.get_result()
+
+    if report.when == "call" and report.failed:
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        screenshot_name = f"{item.name}_{timestamp}.png"
+        screenshot_path = os.path.join(SCREENSHOT_DIR, screenshot_name)
+
+        # Pastikan direktori screenshot ada
+        os.makedirs(SCREENSHOT_DIR, exist_ok=True)
+
+        try:
+            if hasattr(item.instance, 'driver'):  # check driver exist to avoid exception when browser not launch
+                item.instance.driver.save_screenshot(screenshot_path)
+                # Sisipkan path screenshot ke dalam laporan HTML
+                report.extra_html = f'<img src="{screenshot_path}" alt="screenshot" width="400" height="300"/>'
+            else:
+                print("Driver tidak tersedia untuk mengambil screenshot.")
+        except Exception as e:
+            print(f"Gagal mengambil screenshot: {e}")
