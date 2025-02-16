@@ -1,3 +1,4 @@
+import base64
 import os
 import platform
 import subprocess
@@ -40,55 +41,63 @@ def pytest_metadata(metadata, config):
 # ---- capture error/failed testcase in report (khusus running di pipeline github menampilkan screenshot link) ----------
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    # Capture the result of the test execution
+    """Mengambil screenshot jika test gagal dan menambahkannya ke laporan pytest-html."""
     outcome = yield
     report = outcome.get_result()
 
-    # Only capture screenshot on test failure
-    if report.when == 'call' and report.outcome == 'failed':
-        driver = getattr(item.instance, 'web_driver', None)  # Get driver instance
+    # Ambil instance driver dari fixture
+    driver = item.funcargs.get("driver", None)
 
-        if driver is not None:  # Ensure driver exists
-            # Make sure the screenshots folder exists
-            screenshot_dir = 'screenshots'
-            os.makedirs(screenshot_dir, exist_ok=True)
+    if report.when == 'call' and report.failed and driver:
+        # Pastikan folder screenshot ada
+        screenshot_dir = 'screenshots'
+        os.makedirs(screenshot_dir, exist_ok=True)
 
-            # Adjusting UTC to UTC+7
-            local_time = datetime.now(timezone.utc) + timedelta(hours=7)
-            timestamp = local_time.strftime("%Y%m%d_%H%M%S")
+        # Waktu lokal (UTC+7)
+        local_time = datetime.now(timezone.utc) + timedelta(hours=7)
+        timestamp = local_time.strftime("%Y%m%d_%H%M%S")
 
-            # Path to save the screenshot
-            screenshot_path = os.path.join(screenshot_dir, f'{item.name}_{timestamp}.png')
+        # Path untuk menyimpan screenshot
+        screenshot_path = os.path.join(screenshot_dir, f'{item.name}_{timestamp}.png')
 
-            # Capture and save the screenshot
-            driver.save_screenshot(screenshot_path)
+        # Ambil screenshot dan simpan
+        driver.save_screenshot(screenshot_path)
 
-            # Capture screenshot as base64
-            screenshot_base64 = driver.get_screenshot_as_base64()
-
-            # Attach screenshot to pytest-html report
+        # Attach ke laporan pytest-html jika plugin ada
+        if item.config.pluginmanager.hasplugin('html'):
             pytest_html = item.config.pluginmanager.getplugin('html')
-            if pytest_html:
-                extra = getattr(report, 'extra', [])
-                extra.append(pytest_html.extras.image(screenshot_base64, title='Screenshot'))
-                report.extra = extra
+            extra = getattr(report, 'extra', [])
 
-@pytest.hookimpl(optionalhook=True)
-def pytest_html_results_table_header(cells):
-    cells.pop()  # Hapus kolom terakhir ("Link") pada template laporan
-    cells.insert(3, html.th("Screenshot"))  # Menambahkan kolom baru pada laporan dengan header name "Screenshot")
+            # Convert screenshot ke base64 agar bisa ditampilkan di HTML
+            with open(screenshot_path, "rb") as image_file:
+                screenshot_base64 = base64.b64encode(image_file.read()).decode()
 
+            extra.append(pytest_html.extras.image(screenshot_base64, title="Screenshot"))
+            report.extra = extra
 
-@pytest.hookimpl(optionalhook=True)
-def pytest_html_results_table_row(report, cells):
-    if report.when == 'call' and report.failed:
-        # Buat hyperlink ke kolom Screenshot dalam laporan
-        run_id = os.getenv("GITHUB_RUN_ID")
-        artifact_id = os.getenv("ARTIFACT_ID")
-        screenshot_url = f"https://github.com/{os.getenv('GITHUB_REPOSITORY')}/actions/runs/{run_id}/artifacts/{artifact_id}"
-        link = html.a("link here", href=screenshot_url, target="_blank")
-        cells.insert(3, html.td(link))
-        cells.pop()
+@pytest.hookimpl(tryfirst=True)
+def pytest_configure(config):
+    """Konfigurasi pytest-html agar laporan disimpan di folder 'reports/'."""
+    if config.pluginmanager.hasplugin("html"):
+        os.makedirs("reports", exist_ok=True)
+        config.option.htmlpath = os.path.join("reports", "pytest_report.html")
+#
+# @pytest.hookimpl(optionalhook=True)
+# def pytest_html_results_table_header(cells):
+#     cells.pop()  # Hapus kolom terakhir ("Link") pada template laporan
+#     cells.insert(3, html.th("Screenshot"))  # Menambahkan kolom baru pada laporan dengan header name "Screenshot")
+#
+#
+# @pytest.hookimpl(optionalhook=True)
+# def pytest_html_results_table_row(report, cells):
+#     if report.when == 'call' and report.failed:
+#         # Buat hyperlink ke kolom Screenshot dalam laporan
+#         run_id = os.getenv("GITHUB_RUN_ID")
+#         artifact_id = os.getenv("ARTIFACT_ID")
+#         screenshot_url = f"https://github.com/{os.getenv('GITHUB_REPOSITORY')}/actions/runs/{run_id}/artifacts/{artifact_id}"
+#         link = html.a("link here", href=screenshot_url, target="_blank")
+#         cells.insert(3, html.td(link))
+#         cells.pop()
 
 '''--------------------------------- Add options for running pytest -------------------------------'''
 def pytest_addoption(parser):
