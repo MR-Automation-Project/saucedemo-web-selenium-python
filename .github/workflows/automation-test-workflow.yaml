@@ -56,9 +56,9 @@
 #            Add-Content -Path $env:GITHUB_ENV "PASSWORD_GENERAL=$secretValue2"
 
         - name: Create Directory for Reports & Screenshots
+          shell: pwsh
           run: |
-            cd Tests
-            mkdir -p reports screenshots
+            New-Item -ItemType Directory -Path "Tests/reports", "Tests/screenshots" -Force
 
         - name: Run Pytest
           run: | 
