@@ -55,27 +55,22 @@
 #            [Environment]::SetEnvironmentVariable("PASSWORD_GENERAL", $secretValue2, "Machine")
 #            Add-Content -Path $env:GITHUB_ENV "PASSWORD_GENERAL=$secretValue2"
 
-        - name: Create Directory --> reports
+        - name: Create Directory --> Test/reports
           run: | 
+            cd Tests
             mkdir -p reports
 
-        - name: Create Directory --> screenshots
-          run: |
-            mkdir -p screenshots
-
         - name: Run Pytest
-          run: |
-            python -m pytest -vs --browser=chrome --url=testing --html=reports/automation_test_report_on_chrome_win.html --self-contained-html
+          run: | 
+            cd Tests
+            python -m pytest -vs --browser=chrome --url=testing --html=./reports/automation_test_report_on_chrome_win.html --self-contained-html
 
         - name: Upload Report to Github Artifact
           uses: actions/upload-artifact@v4
           if: success() || failure()
           with:
             name: Automation_Test_Report
-            path: |
-              reports/automation_test_report_on_chrome_win.html
-              screenshots/
-            if-no-files-found: warn
+            path: Tests/reports/automation_test_report_on_chrome_win.html
     # ------------------- JOB 2: Run Test on Safari (macOS) -------------------
     test-safari-macos:
       timeout-minutes: 120
