@@ -66,7 +66,7 @@
 
         - name: Run Pytest
           run: |
-            python -m pytest -vs --browser=chrome --url=testing --html=Tests/reports/automation_test_report_on_chrome_win.html --self-contained-html
+            python -m pytest -vs --browser=chrome --url=testing --html=saucedemo-web-selenium-python/Tests/reports/automation_test_report_on_chrome_win.html --self-contained-html
 
         - name: Upload Report to Github Artifact
           uses: actions/upload-artifact@v4
@@ -74,8 +74,8 @@
           with:
             name: Automation_Test_Report
             path: |
-              Tests/reports/automation_test_report_on_chrome_win.html
-              Tests/screenshots/
+              saucedemo-web-selenium-python/Tests/reports/automation_test_report_on_chrome_win.html
+              saucedemo-web-selenium-python/Tests/screenshots/
             if-no-files-found: warn
     # ------------------- JOB 2: Run Test on Safari (macOS) -------------------
     test-safari-macos:
