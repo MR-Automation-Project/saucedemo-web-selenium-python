@@ -50,8 +50,9 @@ def pytest_runtest_makereport(item, call):
 
     if report.when == 'call' and report.failed and driver:
         # Pastikan folder screenshot ada
-        screenshot_dir = 'screenshots'
-        os.makedirs(screenshot_dir, exist_ok=True)
+        screenshot_dir = os.path.join(os.getcwd(), "Tests", "screenshots")
+        if not os.path.exists(screenshot_dir):
+            os.makedirs(screenshot_dir)
 
         # Waktu lokal (UTC+7)
         local_time = datetime.now(timezone.utc) + timedelta(hours=7)
