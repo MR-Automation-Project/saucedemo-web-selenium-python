@@ -60,11 +60,6 @@
             cd Tests
             mkdir -p reports
 
-        - name: Create Directory --> Test/screenshots
-          run: | 
-            cd Tests
-            mkdir -p screenshots
-
         - name: Run Pytest
           run: | 
             cd Tests
@@ -77,8 +72,7 @@
             name: Automation_Test_Report
             path: |
               Tests/reports/automation_test_report_on_chrome_win.html
-              Tests/screenshots/
-              
+
     # ------------------- JOB 2: Run Test on Safari (macOS) -------------------
     test-safari-macos:
       timeout-minutes: 120
