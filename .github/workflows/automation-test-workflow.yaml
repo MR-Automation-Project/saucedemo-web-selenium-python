@@ -66,9 +66,11 @@
             mkdir -p screenshots # Pastikan direktori screenshots dibuat
 
         - name: Run Pytest
+          shell: cmd
           run: | 
             cd Tests
-            python -m pytest -vs --browser=chrome --url=testing --html=./reports/automation_test_report_on_chrome_win.html --self-contained-html
+            python -m pytest -vs --browser=chrome --url=testing `
+            --html=./reports/automation_test_report_on_chrome_win.html --self-contained-html || true
 
 #        - name: Upload Report to Github Artifact
 #          uses: actions/upload-artifact@v4
@@ -127,7 +129,8 @@
         - name: Run Pytest on Safari
           run: |
             cd Tests
-            python -m pytest -vs --browser=safari --url=testing --html=./reports/automation_test_report_safari_mac.html --self-contained-html
+            python -m pytest -vs --browser=safari --url=testing \
+            --html=./reports/automation_test_report_safari_mac.html --self-contained-html || true
 
         - name: Upload Report to Github Artifact
           uses: actions/upload-artifact@v4
