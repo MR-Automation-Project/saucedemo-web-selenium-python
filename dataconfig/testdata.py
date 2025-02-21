@@ -1,19 +1,27 @@
-class TestData:
-    # base url :
-    BASE_URL_TEST = "https://saucedemo.com"
-    BASE_URL_STAG = ""
-    BASE_URL_PROD = ""
+class BaseURL:
+    DEV = ""
+    TESTING = "https://saucedemo.com"
+    STAGING = ""
+    PROD = ""
 
-    # credentials :
-    STANDARD_USERNAME = "standard_user"
+class UserAccount:
+    STANDARD_USER = "standard_user"
+    LOCKED_USER = "locked_out_user"
+    VISUAL_USER = "visual_user"
+    GLITCH_USER = "performance_glitch_user"
     GENERAL_PASSWORD = "secret_sauce"
 
-accounts = [
-    {"username": "standard_zzzz", "password": "secret_sauc1"},
-    # {"username": "standard_user", "password": "secret_sauce"},
-    {"username": "visual_user", "password": "secret_sauce"}
-]
+    #for parametrize :
+    valid_users = [
+        {"username": "standard_user", "password": "secret_sauce"},
+        {"username": "visual_user", "password": "secret_sauce"}
+    ]
 
-products_name = [
-    {"nama_produk1": "Sauce Labs Bike Light", "nama_produk2": "Sauce Labs Fleece Jacket", "nama_produk3": "Sauce Labs Backpack"}
-]
+class ProductItems:
+
+    #for parametrize in scenario add to cart more than 1 items
+    products_name = [
+        {"nama_produk1": "Sauce Labs Bike Light",
+         "nama_produk2": "Sauce Labs Fleece Jacket",
+         "nama_produk3": "Sauce Labs Backpack"}
+    ]

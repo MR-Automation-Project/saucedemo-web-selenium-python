@@ -3,6 +3,8 @@ import time
 import pytest
 import platform
 from platform import python_version, system
+
+from pytest_html import extras
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -10,14 +12,16 @@ from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.webdriver.edge.service import Service as EdgeService
-from dataconfig.testdata import TestData as TD
+from dataconfig.testdata import BaseURL
 import subprocess
 
+SCREENSHOT_DIR = "screenshots"
 
-'''------------------------------ Setup Hook for Report -------------------------------------'''
+#------------- Setup Pytest Hook : adjust Report Title ---------#
 def pytest_html_report_title(report):
     report.title = "["+report.config.getoption("--url") + " env] "+"Automation Testing Report of WEB Sauce Demo"
 
+#------------- Setup Pytest Hook : adjust Metadata info for Report ---------#
 @pytest.hookimpl(tryfirst=True)
 def pytest_metadata(metadata, config):
     keys_to_remove = ['Python', 'Platform', 'Packages', 'JAVA_HOME', 'Plugins']
@@ -34,24 +38,31 @@ def pytest_metadata(metadata, config):
         metadata['Browser'] = ', '.join(browser)
 
 
-'''--------------------------------- Add options for running pytest -------------------------------'''
+# ------------- Add options for running pytest --------------#
 def pytest_addoption(parser):
     # can be run in terminal like this : pytest -vs --browser=chrome,firefox (default firefox if not defined)
     parser.addoption("--browser", action="append", default=[])
     parser.addoption("--url", action="store", default="testing")
 
 
-'''------------Parameterisasi test scr dinamis : memungkinkan jalan di beberapa browser------'''
+# ----------Handling multiple scope in same test class --- #
 def pytest_generate_tests(metafunc):
     if 'browser' in metafunc.fixturenames:
-        browsers = metafunc.config.getoption("browser")
-        metafunc.parametrize("browser", browsers)
+        if metafunc.cls is None:  # Ini adalah test function (scope function)
+            browser = metafunc.config.getoption("--browser") # Ambil browser dari command line
+            metafunc.parametrize("browser", [browser]) # Parameterize dengan nilai tersebut
+        else:  # Ini adalah test class (scope class)
+            browser = metafunc.config.getoption("--browser")  # Ambil browser dari command line
+            metafunc.parametrize("browser", [browser])  # Parameterize dengan nilai tersebut
 
-'''---------------------------------Fixture Scope : Per TEST FUNCTION / METHOD ---------------------------------'''
-@pytest.fixture(scope="function")
-def setup_scope_function(request, browser):
-    url = request.config.getoption("url")
+
+# --------------Create web driver----------------- #
+def create_web_driver(browser):
     web_driver = None
+
+    if isinstance(browser, list):  # Periksa apakah browser berupa list
+        browser = browser[0]  # Ambil elemen pertama dari list
+    # Sekarang browser dipastikan string, bukan list lagi
 
     if browser == "chrome":
         options = webdriver.ChromeOptions()
@@ -60,7 +71,7 @@ def setup_scope_function(request, browser):
         options.add_argument("--disable-notifications")  # for chrome only
         options.add_argument("--start-maximized")
         options.add_argument('--log-level=3')
-        #options.add_argument('--headless')
+        # options.add_argument('--headless')
         web_driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
 
     elif browser == "edge":
@@ -92,26 +103,60 @@ def setup_scope_function(request, browser):
         # Jalankan Safari WebDriver
         options = webdriver.SafariOptions()
         web_driver = webdriver.Safari(options=options)
-
     else:
         pytest.fail(f"Browser '{browser}' is not supported!")
 
+    return web_driver
+
+# ---------------Fixture Scope : Per TEST FUNCTION / METHOD ----------- #
+@pytest.fixture(scope="function")
+def setup_scope_function(request, browser):
+    web_driver = create_web_driver(browser)
+    url = request.config.getoption("url")
+
     if url == "testing":
-        web_driver.get(TD.BASE_URL_TEST)
+        web_driver.get(BaseURL.TESTING)
     elif url == "staging":
-        web_driver.get(TD.BASE_URL_STAG)
+        web_driver.get(BaseURL.STAGING)
     elif url == "prod":
-        web_driver.get(TD.BASE_URL_PROD)
+        web_driver.get(BaseURL.PROD)
+    elif url == "dev":
+        web_driver.get(BaseURL.DEV)
+    else:
+        pytest.fail(f"URL '{url}' is not valid!")
+
+    request.cls.driver = web_driver  # Simpan driver di request
+    yield
+    time.sleep(1.5)
+    web_driver.quit()
+
+# ---------------Fixture Scope : Per CLASS ----------- #
+@pytest.fixture(scope="class")
+def setup_scope_class(request):
+    browser = request.config.getoption("--browser")  # Ambil browser dari command line
+    web_driver = create_web_driver(browser)
+    url = request.config.getoption("url")
+
+    if url == "testing":
+        web_driver.get(BaseURL.TESTING)
+    elif url == "staging":
+        web_driver.get(BaseURL.STAGING)
+    elif url == "prod":
+        web_driver.get(BaseURL.PROD)
+    elif url == "dev":
+        web_driver.get(BaseURL.DEV)
+    else:
+        pytest.fail(f"URL '{url}' is not valid!")
 
     request.cls.driver = web_driver
     yield
     time.sleep(1.5)
     web_driver.quit()
 
-    # capture screenshot jika ada test failed
-SCREENSHOT_DIR = "screenshots"
+# -------handling screenshot jika ada failed pytest --------- #
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
+    """Capture screenshot if test fails and attach to pytest-html report."""
     outcome = yield
     report = outcome.get_result()
 
@@ -120,15 +165,14 @@ def pytest_runtest_makereport(item, call):
         screenshot_name = f"{item.name}_{timestamp}.png"
         screenshot_path = os.path.join(SCREENSHOT_DIR, screenshot_name)
 
-        # Pastikan direktori screenshot ada
-        os.makedirs(SCREENSHOT_DIR, exist_ok=True)
+        os.makedirs(SCREENSHOT_DIR, exist_ok=True)  # Pastikan direktori screenshot ada
 
-        try:
-            if hasattr(item.instance, 'driver'):  # check driver exist to avoid exception when browser not launch
-                item.instance.driver.save_screenshot(screenshot_path)
-                # Sisipkan path screenshot ke dalam laporan HTML
-                report.extra_html = f'<img src="{screenshot_path}" alt="screenshot" width="400" height="300"/>'
-            else:
-                print("Driver tidak tersedia untuk mengambil screenshot.")
-        except Exception as e:
-            print(f"Gagal mengambil screenshot: {e}")
+        driver = getattr(item, 'driver', None)
+        if driver:
+            driver.save_screenshot(screenshot_path)
+            if "pytest_html" in item.config.pluginmanager.list_plugin_names():
+                extra = getattr(report, "extra", [])
+                extra.append(extras.image(screenshot_path))
+                report.extra = extra
+        else:
+            print("Driver tidak tersedia untuk mengambil screenshot.")

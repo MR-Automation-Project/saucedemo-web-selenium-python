@@ -117,3 +117,6 @@ class Basemethod:
 
         screenshot_path = os.path.join(screenshot_dir, f"{name}.png")
         self.driver.save_screenshot(screenshot_path)
+
+    def refresh_browser(self):
+        self.driver.refresh()

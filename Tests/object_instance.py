@@ -7,17 +7,13 @@ from pages.productspage import ProductsPageAction
 class ObjectInstances:
 
     def loginpage(self):
-        obj = LoginPageAction(self.driver)
-        return obj
+        return LoginPageAction(self.driver)
 
     def productpage(self):
-        obj = ProductsPageAction(self.driver)
-        return obj
+        return ProductsPageAction(self.driver)
 
     def aboutpage(self):
-        obj = AboutPageAction(self.driver)
-        return obj
+        return AboutPageAction(self.driver)
 
     def cartpage(self):
-        obj = CartPageAction(self.driver)
-        return obj
+        return CartPageAction(self.driver)

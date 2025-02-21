@@ -7,12 +7,12 @@ class TestLoginAddItemToCart(ObjectInstances):
 
     @pytest.mark.smoke
     def test_add_1_item_to_cart(self):
-        # Automate login flow, add 1 item to cart and verify that item is added to cart
+        """ Scenario : User do login, then add 1 item to cart """
 
         #product name that will be tested
         productname = "Sauce Labs Bike Light"
 
-        #login and ensure login is successfully using assertion
+        #login and assertion
         self.loginpage().login_with_standart_user()
         assert self.productpage().check_visibility_page_title_on_products_page(), "page title after login is not displayed properly"
 
@@ -26,9 +26,9 @@ class TestLoginAddItemToCart(ObjectInstances):
 
     @pytest.mark.parametrize("nama_produk", products_name)
     def test_add_more_than_1_item_to_cart(self, nama_produk):
-        productname = "Sauce Labs Bike Light"
+        """ Scenario : User do login, then add more than 1 item to cart """
 
-        # login and ensure login is successfully using assertion
+        # login and assertion
         self.loginpage().login_with_standart_user()
         assert self.productpage().check_visibility_page_title_on_products_page(), "page title after login is not displayed properly"
 
