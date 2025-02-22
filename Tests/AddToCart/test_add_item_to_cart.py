@@ -1,5 +1,5 @@
 import pytest
-from dataconfig.testdata import *
+from dataconfig.testdata import ProductItems as PD
 from Tests.object_instance import ObjectInstances
 
 @pytest.mark.usefixtures("setup_scope_function")
@@ -8,7 +8,6 @@ class TestLoginAddItemToCart(ObjectInstances):
     @pytest.mark.smoke
     def test_add_1_item_to_cart(self):
         """ Scenario : User do login, then add 1 item to cart """
-
         #product name that will be tested
         productname = "Sauce Labs Bike Light"
 
@@ -24,7 +23,7 @@ class TestLoginAddItemToCart(ObjectInstances):
         self.productpage().click_cart_icon()
         assert self.cartpage().check_visibility_item_in_cart(productname), "item is not listed in the cart page"
 
-    @pytest.mark.parametrize("nama_produk", products_name)
+    @pytest.mark.parametrize("nama_produk", PD.products_name)
     def test_add_more_than_1_item_to_cart(self, nama_produk):
         """ Scenario : User do login, then add more than 1 item to cart """
 

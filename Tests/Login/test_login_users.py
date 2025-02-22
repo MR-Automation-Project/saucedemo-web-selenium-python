@@ -14,7 +14,6 @@ class TestValidLogin(ObjectInstances):
         self.loginpage().login(akun['username'], akun['password'])
         assert self.productpage().check_visibility_page_title_on_products_page(), "gagal landing on product page"
 
-@pytest.mark.class_scope
 @pytest.mark.usefixtures("setup_scope_class")
 class TestInvalidLogin(ObjectInstances):
 

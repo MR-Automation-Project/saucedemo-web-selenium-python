@@ -33,9 +33,9 @@ Make sure you have the following installed:
 9. Run the Test :
 	--> (.venv) D:\Automation\saucedemo-web-selenium-python\Tests> pytest -vs --browser=chrome --url=testing --html=report.html
 	Note : If you want to running in some browser* , just add the parameters --browser again
-		e.g. : pytest -vs --browser=chrome --browser=firefox --url=testing --html=report.html
+		e.g. : pytest -vs --browser=chrome --browser=firefox --url=testing --html=reports/report.html
 		*for now only 3 parameter of browser is allowed (chrome, firefox, & edge)
-		*if you want to running in safari browser, you must execute on mac os (just put the parameter --browser=safari)
+		*if you want to running in safari browser, you must execute on mac os (set the parameter in command line with --browser=safari)
 
 10. Please check the report file "report.html", and you should be open the html report file of automation test
 

@@ -1,5 +1,5 @@
 import pytest
-from dataconfig.testdata import accounts
+from dataconfig.testdata import UserAccount as UA
 from Tests.object_instance import ObjectInstances
 
 
@@ -7,7 +7,7 @@ from Tests.object_instance import ObjectInstances
 class TestLoginAndNavigateAboutPage(ObjectInstances):
 
     @pytest.mark.debug
-    @pytest.mark.parametrize("akun", accounts)
+    @pytest.mark.parametrize("akun", UA.valid_users)
     def test_navigate_to_about_page(self, akun):
         # Automate login flow, click on hamburger button (top left), navigate to 'About' and verify if it successfully navigated or not.
         self.loginpage().login(akun['username'], akun['password'])

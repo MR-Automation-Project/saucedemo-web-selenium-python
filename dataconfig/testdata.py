@@ -11,7 +11,7 @@ class UserAccount:
     GLITCH_USER = "performance_glitch_user"
     GENERAL_PASSWORD = "secret_sauce"
 
-    #for parametrize :
+    #for parametrize some credential user:
     valid_users = [
         {"username": "standard_user", "password": "secret_sauce"},
         {"username": "visual_user", "password": "secret_sauce"}
@@ -19,7 +19,7 @@ class UserAccount:
 
 class ProductItems:
 
-    #for parametrize in scenario add to cart more than 1 items
+    #sample for parametrize in scenario add to cart more than 1 items
     products_name = [
         {"nama_produk1": "Sauce Labs Bike Light",
          "nama_produk2": "Sauce Labs Fleece Jacket",

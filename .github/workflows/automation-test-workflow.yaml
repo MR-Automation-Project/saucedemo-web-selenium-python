@@ -12,9 +12,9 @@
     push:
       branches: [ main ]        # Workflow berjalan saat ada push ke branch main
     schedule:
-      - cron: "0 17 * * *"      # Menjalankan workflow setiap hari pukul 00:00 UTC(+7 waktu local)
+      - cron: "0 17 * * *"      # Menjalankan workflow setiap hari pukul 00:00 (UTC+7)
 
-# ------------------- JOB 1: Run Test on Windows Browser(Chrome/Firefox) -------------------
+# ------------------- JOB 1: Run Test on Windows Browser(Chrome & Firefox) -------------------
   jobs:
     test-chrome-windows:
       timeout-minutes: 120
@@ -59,18 +59,19 @@
 #          run: |
 #            cd Tests
 #            mkdir -p reports
+
         - name: Create Directory --> Tests/reports & screenshots
           run: |
             cd Tests
             mkdir -p reports
-            mkdir -p screenshots # Pastikan direktori screenshots dibuat
+            mkdir -p screenshots
 
         - name: Run Pytest
           shell: cmd
           run: | 
             cd Tests
-            python -m pytest -vs --browser=chrome --url=testing ^
-            --html=./reports/automation_test_report_on_chrome_win.html --self-contained-html
+            python -m pytest -vs --browser=chrome --browser=firefox --url=testing ^
+            --html=./reports/automation_test_report_on_chrome_win.html --self-contained-html -n auto
 
 #        - name: Upload Report to Github Artifact
 #          uses: actions/upload-artifact@v4
@@ -129,8 +130,8 @@
         - name: Run Pytest on Safari
           run: |
             cd Tests
-            python -m pytest -vs --browser=safari --url=testing \
-            --html=./reports/automation_test_report_safari_mac.html --self-contained-html
+            python -m pytest -vv -s --browser=safari --url=testing \
+            --html=./reports/automation_test_report_safari_mac.html --self-contained-html -n auto
 
         - name: Upload Report to Github Artifact
           uses: actions/upload-artifact@v4
