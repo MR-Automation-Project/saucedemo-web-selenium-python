@@ -1,6 +1,8 @@
 import time
 
 import pytest
+
+from Tests.conftest import class_scope
 from dataconfig.testdata import UserAccount as UA
 from utils import refresh_browser, take_screenshot
 from Tests.object_instance import ObjectInstances
@@ -12,9 +14,8 @@ class TestValidLogin(ObjectInstances):
         self.loginpage().login(akun['username'], akun['password'])
         assert self.productpage().check_visibility_page_title_on_products_page(), "gagal landing on product page"
 
-
+@pytest.mark.class_scope
 @pytest.mark.usefixtures("setup_scope_class")
-# @pytest.mark.parametrize("browser", ["chrome", "firefox", "edge"])  # Parameterize browser di level class (WAJIB)
 class TestInvalidLogin(ObjectInstances):
 
     def test_login_with_blank_all_field(self):

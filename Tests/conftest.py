@@ -44,16 +44,67 @@ def pytest_addoption(parser):
     parser.addoption("--browser", action="append", default=[])
     parser.addoption("--url", action="store", default="testing")
 
+def pytest_configure(config):
+    config.addinivalue_line("markers", "class_scope: marks tests that use class-level scope for browser parameterization")
+
+# Marker untuk menandai test dengan scope "class"
+@pytest.mark.class_scope  # Definisikan sebagai marker pytest
+def class_scope():
+    pass
+
 
 # ----------Handling multiple scope in same test class --- #
 def pytest_generate_tests(metafunc):
     if 'browser' in metafunc.fixturenames:
-        if metafunc.cls is None:  # Ini adalah test function (scope function)
-            browser = metafunc.config.getoption("--browser") # Ambil browser dari command line
-            metafunc.parametrize("browser", [browser]) # Parameterize dengan nilai tersebut
-        else:  # Ini adalah test class (scope class)
-            browser = metafunc.config.getoption("--browser")  # Ambil browser dari command line
-            metafunc.parametrize("browser", [browser])  # Parameterize dengan nilai tersebut
+        browsers = metafunc.config.getoption("--browser")
+        if not browsers:
+            browsers = ["chrome"]  # Default browser
+
+        # Parameterisasi untuk scope "class"
+        if hasattr(metafunc.cls, "class_scope"):  # Periksa di level class
+            metafunc.parametrize("browser", browsers, scope="class")
+        # Parameterisasi untuk scope "function"
+        else:
+            metafunc.parametrize("browser", browsers, scope="function")
+
+    """Changes 4"""
+    # if 'browser' in metafunc.fixturenames:
+    #     browsers = metafunc.config.getoption("--browser")
+    #     if not browsers:
+    #         browsers = ["chrome"]  # Default browser
+    #
+    #     # Parameterize di level function, tetapi scope class akan menangani instance class yang berbeda
+    #     metafunc.parametrize("browser", browsers, scope="function")
+
+    """Changes 3"""
+    # if 'browser' in metafunc.fixturenames:
+    #     browsers = metafunc.config.getoption("--browser")
+    #     if not browsers:
+    #         browsers = ["chrome"]  # Default browser
+    #
+    #     # Periksa apakah class memiliki marker "class_scope"
+    #     if hasattr(metafunc.cls, "class_scope"):
+    #         metafunc.parametrize("browser", browsers, scope="class")
+    #     else:
+    #         metafunc.parametrize("browser", browsers, scope="function")
+
+"""CHanges 2"""
+    # if 'browser' in metafunc.fixturenames:
+    #     browsers = metafunc.config.getoption("--browser")
+    #     if not browsers:
+    #         browsers = ["chrome"]  # Default browser if none specified
+    #
+    #     # Perhatikan perubahan ini: scope sekarang "function"
+    #     metafunc.parametrize("browser", browsers, scope="function")
+
+"""changes 1"""
+        # if 'browser' in metafunc.fixturenames:
+    #     if metafunc.cls is None:  # Ini adalah test function (scope function)
+    #         browser = metafunc.config.getoption("--browser") # Ambil browser dari command line
+    #         metafunc.parametrize("browser", [browser]) # Parameterize dengan nilai tersebut
+    #     else:  # Ini adalah test class (scope class)
+    #         browser = metafunc.config.getoption("--browser")  # Ambil browser dari command line
+    #         metafunc.parametrize("browser", [browser])  # Parameterize dengan nilai tersebut
 
 
 # --------------Create web driver----------------- #
@@ -109,49 +160,52 @@ def create_web_driver(browser):
     return web_driver
 
 # ---------------Fixture Scope : Per TEST FUNCTION / METHOD ----------- #
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="function", autouse=True)
 def setup_scope_function(request, browser):
-    web_driver = create_web_driver(browser)
-    url = request.config.getoption("url")
+    if hasattr(request.cls, "class_scope"):
+        if request.cls.driver is None:  # Cek apakah driver sudah diinisialisasi
+            web_driver = create_web_driver(browser)
+            url = request.config.getoption("url")
 
-    if url == "testing":
-        web_driver.get(BaseURL.TESTING)
-    elif url == "staging":
-        web_driver.get(BaseURL.STAGING)
-    elif url == "prod":
-        web_driver.get(BaseURL.PROD)
-    elif url == "dev":
-        web_driver.get(BaseURL.DEV)
+            if url == "testing":
+                web_driver.get(BaseURL.TESTING)
+            elif url == "staging":
+                web_driver.get(BaseURL.STAGING)
+            elif url == "prod":
+                web_driver.get(BaseURL.PROD)
+            elif url == "dev":
+                web_driver.get(BaseURL.DEV)
+            else:
+                pytest.fail(f"URL '{url}' is not valid!")
+            request.cls.driver = web_driver # simpan driver yang diinisialisasi
+        yield
+        # Tidak perlu quit di sini, karena sudah dihandle oleh scope class
     else:
-        pytest.fail(f"URL '{url}' is not valid!")
+        web_driver = create_web_driver(browser)
+        url = request.config.getoption("url")
 
-    request.cls.driver = web_driver  # Simpan driver di request
-    yield
-    time.sleep(1.5)
-    web_driver.quit()
+        if url == "testing":
+            web_driver.get(BaseURL.TESTING)
+        elif url == "staging":
+            web_driver.get(BaseURL.STAGING)
+        elif url == "prod":
+            web_driver.get(BaseURL.PROD)
+        elif url == "dev":
+            web_driver.get(BaseURL.DEV)
+        else:
+            pytest.fail(f"URL '{url}' is not valid!")
+
+        request.cls.driver = web_driver
+        yield
+        time.sleep(1.5)
+        web_driver.quit()
+
 
 # ---------------Fixture Scope : Per CLASS ----------- #
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="class", autouse=True)
 def setup_scope_class(request):
-    browser = request.config.getoption("--browser")  # Ambil browser dari command line
-    web_driver = create_web_driver(browser)
-    url = request.config.getoption("url")
-
-    if url == "testing":
-        web_driver.get(BaseURL.TESTING)
-    elif url == "staging":
-        web_driver.get(BaseURL.STAGING)
-    elif url == "prod":
-        web_driver.get(BaseURL.PROD)
-    elif url == "dev":
-        web_driver.get(BaseURL.DEV)
-    else:
-        pytest.fail(f"URL '{url}' is not valid!")
-
-    request.cls.driver = web_driver
+    request.cls.driver = None  # Placeholder
     yield
-    time.sleep(1.5)
-    web_driver.quit()
 
 # -------handling screenshot jika ada failed pytest --------- #
 @pytest.hookimpl(hookwrapper=True)
