@@ -131,7 +131,7 @@
           run: |
             cd Tests
             python -m pytest -vv -s --browser=safari --url=testing \
-            --html=./reports/automation_test_report_safari_mac.html --self-contained-html -n auto
+            --html=./reports/automation_test_report_safari_mac.html --self-contained-html
 
         - name: Upload Report to Github Artifact
           uses: actions/upload-artifact@v4
